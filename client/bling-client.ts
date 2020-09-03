@@ -28,6 +28,18 @@ export default class BlingClient {
             .map(e => e['pedido']);
     }
 
+    public async getPedido(numero: string): Promise<Pedido> {
+        const response = await axios.get(`/pedido/${numero}/json`);
+        const retorno = response.data['retorno'];
+
+        if (retorno['erros']) {
+            const erro = retorno['erros'].erro || retorno['erros'][0].erro;
+            throw new Error(erro.msg);
+        }
+
+        return retorno['pedidos'][0].pedido;
+    }
+
     public async adicionarPedido(cliente: string, item: Item): Promise<Pedido> {
         const options = { compact: true, ignoreComment: true, indentText: false };
         const xml = converter.js2xml({
@@ -59,6 +71,12 @@ export declare interface Pedido {
     readonly numero: string;
 
     readonly idPedido?: number;
+
+    readonly data: string;
+
+    readonly totalprodutos: string;
+
+    readonly totalvenda: string;
 
 }
 
