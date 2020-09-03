@@ -1,4 +1,6 @@
 import qs from 'querystring'
+import converter from 'xml-js'
+
 import Axios from 'axios'
 
 if (!process.env['BLING_API_KEY']) {
@@ -26,7 +28,19 @@ export default class BlingClient {
             .map(e => e['pedido']);
     }
 
-    public async adicionarPedido(xml: string): Promise<Pedido> {
+    public async adicionarPedido(cliente: string, item: Item): Promise<Pedido> {
+        const options = { compact: true, ignoreComment: true, indentText: false };
+        const xml = converter.js2xml({
+            pedido: {
+                cliente: {
+                    nome: cliente
+                },
+                pedido: {
+                    itens: { item }
+                }
+            }
+        }, options);
+
         const response = await axios.post('/pedido/json', qs.stringify({ xml }));
         const retorno = response.data['retorno'];
 
@@ -45,5 +59,19 @@ export declare interface Pedido {
     readonly numero: string;
 
     readonly idPedido?: number;
+
+}
+
+export declare interface Item {
+
+    codigo: number;
+
+    descricao: string;
+
+    un: 'Un' | string;
+
+    qtde: number;
+
+    vlr_unit: number;
 
 }
