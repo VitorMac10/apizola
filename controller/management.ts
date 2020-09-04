@@ -32,7 +32,9 @@ export default class Management {
                 }).then(async pedido => {
                     const { numero, data, totalprodutos, totalvenda } = await Bling.getPedido(pedido.numero);
                     await this.db.collection('opportunities').insertOne({
-                        _id: pedido.idPedido, numero, data, totalprodutos, totalvenda
+                        _id: pedido.idPedido, numero, data,
+                        totalprodutos: Number(totalprodutos),
+                        totalvenda: Number(totalvenda)
                     });
 
                     res.status(201).send();
@@ -40,6 +42,35 @@ export default class Management {
             }
 
             res.status(200).send();
+        });
+
+        route.get('/deals', async (req, res) => {
+            const data = await this.db.collection('opportunities')
+                .aggregate([
+                    {
+                        $project: {
+                            data: true,
+                            totalvenda: true
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: '$data',
+                            total: {
+                                $sum: '$totalvenda'
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: false,
+                            data: '$_id',
+                            total: true
+                        }
+                    }
+                ]).toArray();
+
+            res.status(200).send(data);
         });
     }
 
