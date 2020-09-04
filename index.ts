@@ -4,6 +4,8 @@ dotenv.config();
 import express from 'express'
 import { MongoClient } from 'mongodb'
 
+import Management, { route } from './controller/management';
+
 const api = express();
 api.use(express.json());
 
@@ -15,5 +17,9 @@ api.use(express.json());
     const MONGO_URL = process.env['MONGODB_URL'] as string;
     const client = await MongoClient.connect(MONGO_URL, { useUnifiedTopology: true });
 
-})().then(() => api.listen(process.env['PORT'] || 3000))
-    .catch((e: Error) => console.error(`[ERRO] ${e.message}`));
+    new Management(client);
+    api.use('/management', route);
+})().then(() => {
+    api.listen(process.env['PORT'] || 3000,
+        () => console.log('API iniciada com sucesso'))
+}).catch((e: Error) => console.error(`[ERRO] ${e.message}`));
